@@ -1,0 +1,68 @@
+<%#
+    Shared form for creating and editing a listing.
+    Expects: action (form URL), submitLabel, listing (or null for a new listing)
+
+    Field names like listing[title] make Express build req.body.listing = { title: ... },
+    which is exactly the shape our Joi validator (validators/schemas.js) expects.
+%>
+<% const l = listing || {}; %>
+<form action="<%= action %>" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+    <div class="mb-3">
+        <label for="title" class="form-label">Title</label>
+        <input id="title" name="listing[title]" class="form-control" placeholder="e.g. Sunny sea-view villa" value="<%= l.title || '' %>" maxlength="100" required>
+        <div class="invalid-feedback">Please give your place a title.</div>
+    </div>
+
+    <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <textarea id="description" name="listing[description]" class="form-control" rows="4" placeholder="What makes your place special?"><%= l.description || '' %></textarea>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="category" class="form-label">Category</label>
+            <select id="category" name="listing[category]" class="form-select" required>
+                <% for (const category of CATEGORIES) { %>
+                    <option value="<%= category.name %>" <%= l.category === category.name ? "selected" : "" %>><%= category.name %></option>
+                <% } %>
+            </select>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <label for="price" class="form-label">Price / night (₹)</label>
+            <input id="price" name="listing[price]" type="number" min="0" class="form-control" placeholder="2500" value="<%= l.price ?? '' %>" required>
+            <div class="invalid-feedback">Enter a price of 0 or more.</div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <label for="maxGuests" class="form-label">Max guests</label>
+            <input id="maxGuests" name="listing[maxGuests]" type="number" min="1" max="20" class="form-control" value="<%= l.maxGuests || 2 %>" required>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="location" class="form-label">Location</label>
+            <input id="location" name="listing[location]" class="form-control" placeholder="e.g. Calangute, Goa" value="<%= l.location || '' %>" required>
+            <div class="invalid-feedback">Where is your place?</div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="country" class="form-label">Country</label>
+            <input id="country" name="listing[country]" class="form-control" placeholder="e.g. India" value="<%= l.country || '' %>" required>
+            <div class="invalid-feedback">Please enter a country.</div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Photo</label>
+        <% if (l.image && l.image.url) { %>
+            <div class="mb-2 d-flex align-items-center gap-3">
+                <img src="<%= l.image.url %>" alt="Current photo" class="thumb" style="width: 120px; height: 80px;">
+                <span class="text-muted-ll small">Current photo - leave the fields below empty to keep it.</span>
+            </div>
+        <% } %>
+        <input name="image" type="file" accept="image/png, image/jpeg, image/webp" class="form-control mb-2" aria-label="Upload a photo">
+        <input name="listing[image][url]" type="url" class="form-control" placeholder="...or paste an image URL" aria-label="Image URL">
+        <div class="form-text">Upload a JPG/PNG/WebP up to 5 MB, or paste a link. No photo? We'll use a nice default.</div>
+    </div>
+
+    <button class="btn btn-brand px-4"><%= submitLabel %></button>
+</form>

@@ -1,0 +1,10 @@
+<% layout("/layouts/boilerplate") -%>
+
+<div class="container">
+    <div class="empty-state">
+        <div class="display-1 fw-bold" style="color: var(--brand);"><%= status %></div>
+        <h1 class="h3 fw-bold text-dark mt-2"><%= status === 404 ? "We can't find that page" : "Something went wrong" %></h1>
+        <p class="mb-4"><%= message %></p>
+        <a href="/listings" class="btn btn-brand">Back to exploring</a>
+    </div>
+</div>

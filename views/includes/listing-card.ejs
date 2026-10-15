@@ -1,0 +1,27 @@
+<%#
+    One listing in a grid.
+    Expects: listing (with reviews populated for the rating), nights (optional - shows a stay total when > 0)
+%>
+<% const stayNights = typeof nights !== "undefined" ? nights : 0; %>
+<a href="/listings/<%= listing._id %>" class="listing-card">
+    <div class="img-wrap">
+        <img src="<%= listing.image.url %>" alt="<%= listing.title %>" loading="lazy">
+        <span class="badge-category"><%= listing.category %></span>
+    </div>
+    <div class="title-row">
+        <div class="title"><%= listing.location %>, <%= listing.country %></div>
+        <% if (listing.averageRating) { %>
+            <div class="rating"><i class="fa-solid fa-star"></i> <%= listing.averageRating.toFixed(1) %></div>
+        <% } else { %>
+            <div class="rating text-muted-ll">New</div>
+        <% } %>
+    </div>
+    <div class="meta"><%= listing.title %></div>
+    <div class="meta">Up to <%= listing.maxGuests %> guests</div>
+    <div class="price">
+        <b><%= formatPrice(listing.price) %></b> <span class="text-muted-ll">night</span>
+        <% if (stayNights > 0) { %>
+            <span class="text-muted-ll">· <u><%= formatPrice(listing.price * stayNights) %> total</u></span>
+        <% } %>
+    </div>
+</a>

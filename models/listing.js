@@ -1,62 +1,99 @@
 const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
-
 const Review = require("./review.js");
-const { string } = require("joi");
+const Booking = require("./booking.js");
+const { CATEGORY_NAMES } = require("../utils/constants.js");
 
-const listingSchema = new Schema({
-    title: {
-        type: String,
-        required: true
-    },
-    description: String,
-    image: {
-        filename: {
+const DEFAULT_IMAGE_URL =
+    "https://images.unsplash.com/photo-1710609942195-b9dab8f48fc6?q=80&w=1200&auto=format&fit=crop";
+
+const listingSchema = new mongoose.Schema(
+    {
+        title: {
             type: String,
+            required: true,
+            trim: true,
         },
-        url: {
-        type: String,
-        //when img is undefined
-        default: "https://images.unsplash.com/photo-1710609942195-b9dab8f48fc6?q=80&w=2127&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-        //when image is sent but empty
-        set: (v)=> v === "" ? "https://images.unsplash.com/photo-1710609942195-b9dab8f48fc6?q=80&w=2127&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" : v,
+        description: {
+            type: String,
+            trim: true,
         },
-    },
-    price: Number,
-    location: String,
-    country: String,
-    reviews: [
-        {
-            type: Schema.Types.ObjectId,
-            ref: "Review",
+        image: {
+            filename: String,
+            url: {
+                type: String,
+                default: DEFAULT_IMAGE_URL,
+                set: (v) => (v ? v : DEFAULT_IMAGE_URL), // empty string -> default image
+            },
         },
-    ],
-    owner: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-    },
-    geometry: {
-        type: {
-            type: String, //Don't do '{location: { type: String }}',
-            enum: ['Point'], // 'location.type' must be 'Point'
+        price: {
+            // price per night, in rupees
+            type: Number,
+            required: true,
+            min: 0,
+        },
+        location: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        country: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        category: {
+            type: String,
+            enum: CATEGORY_NAMES,
+            default: "Rooms",
+        },
+        maxGuests: {
+            type: Number,
+            min: 1,
+            default: 2,
+        },
+        owner: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
             required: true,
         },
-        coordinates: {
-            type: [Number],
-            required: true,
-        }
+        reviews: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Review",
+            },
+        ],
+        // GeoJSON point used to draw the map. Optional: if geocoding fails we simply hide the map.
+        geometry: {
+            type: {
+                type: String,
+                enum: ["Point"],
+            },
+            coordinates: [Number], // [longitude, latitude]
+        },
     },
-    category: {
-        type: String,
-        enum: ["Rooms", "Iconic Cities", "Mountains", "Castle", "Camping", "Pools", "Farmhouse", "Arctic"],
-    },
-});
-
-listingSchema.post("findOneAndDelete", async(listing)=>{
-    if(listing){
-        await Review.deleteMany({_id : {$in: listing.reviews}});
+    {
+        timestamps: true,
+        toJSON: { virtuals: true },
+        toObject: { virtuals: true },
     }
+);
+
+/**
+ * Average star rating. Only works when `reviews` has been populated
+ * (otherwise we just have ids, not ratings) - returns null if there are no reviews.
+ */
+listingSchema.virtual("averageRating").get(function () {
+    const ratings = (this.reviews || []).map((r) => r && r.rating).filter(Boolean);
+    if (ratings.length === 0) return null;
+    const sum = ratings.reduce((total, r) => total + r, 0);
+    return Math.round((sum / ratings.length) * 100) / 100;
 });
 
-const Listing = mongoose.model("Listing", listingSchema);
-module.exports = Listing;
+/** Cascade delete: when a listing is deleted, delete its reviews and bookings too. */
+listingSchema.post("findOneAndDelete", async (listing) => {
+    if (!listing) return;
+    await Review.deleteMany({ _id: { $in: listing.reviews } });
+    await Booking.deleteMany({ listing: listing._id });
+});
+
+module.exports = mongoose.model("Listing", listingSchema);

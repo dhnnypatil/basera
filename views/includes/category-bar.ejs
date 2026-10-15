@@ -1,0 +1,14 @@
+<%#
+    Horizontal list of category icons.
+    Expects: activeCategory (string or ""), linkFor(categoryName) -> URL
+%>
+<div class="category-bar">
+    <a href="<%= linkFor("") %>" class="category-item <%= !activeCategory ? 'active' : '' %>">
+        <i class="fa-solid fa-fire"></i><span>All</span>
+    </a>
+    <% for (const category of CATEGORIES) { %>
+        <a href="<%= linkFor(category.name) %>" class="category-item <%= activeCategory === category.name ? 'active' : '' %>">
+            <i class="<%= category.icon %>"></i><span><%= category.name %></span>
+        </a>
+    <% } %>
+</div>

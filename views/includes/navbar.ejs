@@ -1,48 +1,63 @@
-<style>
-  .btn-search{
-    border-radius: 25px;
-    background-color: #FF5A5F;
-    color: white;
-  }
-  .btn-search:hover{
-    background-color: white;
-    color: black;
-  }
-  .search-inp{
-    border-radius: 25px;
-    padding: 0.5rem 3rem 0.5rem 3rem;
-  }
-</style>
+<nav class="navbar navbar-expand-lg navbar-ll sticky-top">
+    <div class="container">
+        <a class="brand-logo" href="/"><i class="fa-regular fa-compass"></i> Basera</a>
 
-<nav class="navbar navbar-expand-md bg-body-light border-bottom sticky-top">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="/listings"><i class="fa-regular fa-compass"></i></a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-        <div class="navbar-nav">
-          <!-- <a class="nav-link" href="/">Home</a> -->
-          <a class="nav-link" href="/listings">Explore</a>
-        </div>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-        <div class="navbar-nav ms-auto">
-          <form class="d-flex" role="search">
-            <input class="form-control me-2 search-inp" type="search" placeholder="Search destinations" >
-            <button class="btn btn-search" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
-          </form>
-        </div>
+        <div class="collapse navbar-collapse" id="mainNav">
+            <!-- Quick search (hidden on the home page, which has its own big search) -->
+            <% if (currentPath !== "/") { %>
+                <form class="nav-search mx-lg-auto my-3 my-lg-0" action="/listings" method="GET" role="search">
+                    <input type="search" name="q" placeholder="Search destinations" aria-label="Search destinations">
+                    <button type="submit" aria-label="Search"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </form>
+            <% } %>
 
-        <div class="navbar-nav ms-auto">
-          <a class="nav-link" href="/listings/new">Nest your home</a>
-          <% if(!currUser) {%>
-            <a class="nav-link" href="/signup"><b>SignUp</b></a>
-            <a class="nav-link" href="/login"><b>Login</b></a>
-          <% } %>
-          <% if(currUser) {%>
-            <a class="nav-link" href="/logout">Logout</a>
-          <% } %>
+            <div class="navbar-nav ms-auto align-items-lg-center gap-1">
+                <a class="nav-link" href="/listings">Explore</a>
+
+                <% if (!currUser) { %>
+                    <a class="nav-link" href="/signup?role=host">Become a host</a>
+                    <a class="nav-link" href="/login">Log in</a>
+                    <a class="btn btn-brand ms-lg-2" href="/signup">Sign up</a>
+
+                <% } else { %>
+                    <% if (currUser.role === ROLES.HOST) { %>
+                        <a class="nav-link" href="/dashboard">Dashboard</a>
+                        <a class="nav-link" href="/listings/new"><i class="fa-solid fa-plus me-1"></i>List your place</a>
+                    <% } else { %>
+                        <a class="nav-link" href="/bookings">My trips</a>
+                    <% } %>
+
+                    <div class="dropdown ms-lg-2">
+                        <button class="user-menu-btn" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Account menu">
+                            <i class="fa-solid fa-bars"></i>
+                            <span class="avatar"><%= currUser.username.charAt(0) %></span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                            <li class="px-3 py-2">
+                                <div class="fw-bold"><%= currUser.username %></div>
+                                <span class="role-badge role-<%= currUser.role %>"><%= currUser.role === ROLES.HOST ? "Host" : "Customer" %></span>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <% if (currUser.role === ROLES.HOST) { %>
+                                <li><a class="dropdown-item" href="/dashboard">Host dashboard</a></li>
+                                <li><a class="dropdown-item" href="/listings/new">List a new place</a></li>
+                            <% } else { %>
+                                <li><a class="dropdown-item" href="/bookings">My trips</a></li>
+                            <% } %>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form action="/logout" method="POST">
+                                    <button class="dropdown-item">Log out</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                <% } %>
+            </div>
         </div>
-      </div>
     </div>
 </nav>
